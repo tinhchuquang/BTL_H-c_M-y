@@ -200,37 +200,39 @@ def contructor_knn(data_train, label_train):
     label_all = sum([label_all, label], [])
     return data_all, label_all 
 
-def _KNN(data_train, label_train):
+def _KNN(data_train, label_train, data_test):
     neigh = KNeighborsClassifier(n_neighbors=78, weights='distance', algorithm='auto')
     data = []
     data_train2, label_train2= contructor_knn(data_train, label_train)
     data_train_count, count_vect = cacalator_count_vect(data_train2)
     data_train_tfidf, tfidf_tranformer = caculator_tfidf(data_train_count)
     neigh.fit(data_train_tfidf, label_train2)
-    return neigh
+    data_test_tfidf = caculator_data_test(data_test,count_vect,tfidf_tranformer)
+    label_KNN = neigh.predict(data_test_tfidf)
+    return label_KNN
 
 def contructor():
     data_train, label_train, data_test, label_test = load_data('Train_Title.csv')
     data_train_count, count_vect = cacalator_count_vect(data_train)
     data_train_tfidf, tfidf_tranformer = caculator_tfidf(data_train_count)
     SGD = SGD_linear_model(data_train_tfidf, label_train)
-    KNN = _KNN(data_train, label_train)
+    
     SVM = _SVC(data_train_tfidf, label_train)
     
+    return SGD, SVM,data_train, label_train, count_vect, tfidf_tranformer
 
-    return SGD, SVM, KNN, count_vect, tfidf_tranformer
+SGD, SVM ,data_train, label_train, count_vect, tfidf_tranformer= contructor()
 
-SGD, SVM , KNN , count_vect, tfidf_tranformer= contructor()
-
-def predict(text):
+def predict(text, data_train, label_train):
     data_test_tfidf = caculator_data_test(text,count_vect,tfidf_tranformer) 
     label_SGD = SGD.predict(data_test_tfidf)
     label_SVM = SVM.predict(data_test_tfidf)
-    label_KNN = KNN.predict(data_test_tfidf)
+    label_KNN = _KNN(data_train, label_train, text)
+    
 
     return label_SGD, label_SVM, label_KNN
 
-label_SGD,label_SVM,label_KNN =predict('Good C++ Debugging IDE Environment for Linux')
+label_SGD,label_SVM,label_KNN =predict('Good C++ Debugging IDE Environment for Linux', data_train, label_train)
 print(label_SGD)
 print(label_SVM)
 print(label_KNN)    
